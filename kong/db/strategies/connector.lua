@@ -55,4 +55,34 @@ function Connector:remove_lock()
 end
 
 
+function Connector:schema_migrations()
+  error(fmt("schema_migrations() not implemented for '%s' strategy",
+            self.database))
+end
+
+
+function Connector:schema_bootstrap()
+  error(fmt("schema_bootstrap() not implemented for '%s' strategy",
+            self.database))
+end
+
+
+function Connector:schema_reset()
+  error(fmt("schema_reset() not implemented for '%s' strategy",
+            self.database))
+end
+
+
+function Connector:run_up_migration()
+  error(fmt("run_up_migration() not implemented for '%s' strategy",
+            self.database))
+end
+
+
+function Connector:record_migration()
+  error(fmt("record_migration() not implemented for '%s' strategy",
+            self.database))
+end
+
+
 return Connector

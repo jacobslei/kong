@@ -1060,6 +1060,14 @@ function Schema:process_auto_fields(input, context)
   local output = tablex.deepcopy(input)
   local now = time()
 
+  if context == "select" and self.translations then
+    for _, translation in ipairs(self.translations) do
+      if type(translation.read) == "function" then
+        output = translation.read(output)
+      end
+    end
+  end
+
   for key, field in self:each_field() do
     if field.auto then
       if field.uuid and context == "insert" then
@@ -1096,7 +1104,30 @@ function Schema:process_auto_fields(input, context)
     end
   end
 
+  if context ~= "select" and self.translations then
+    for _, translation in ipairs(self.translations) do
+      if type(translation.write) == "function" then
+        output = translation.write(output)
+      end
+    end
+  end
+
   return output
+end
+
+
+function Schema:load_translations(translation)
+  if not self.translations then
+    self.translations = {}
+  end
+
+  for i = 1, #self.translations do
+    if self.translations[i] == translation then
+      return
+    end
+  end
+
+  insert(self.translations, translation)
 end
 
 

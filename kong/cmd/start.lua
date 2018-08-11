@@ -14,7 +14,7 @@ local function execute(args)
   assert(not kill.is_running(conf.nginx_pid),
          "Kong is already running in " .. conf.prefix)
 
-  local db = DB.new(conf)
+  local db = assert(DB.new(conf))
   assert(db:init_connector())
   local dao = assert(DAOFactory.new(conf, db))
   local ok, err_t = dao:init()
@@ -31,6 +31,7 @@ local function execute(args)
       assert(dao:run_migrations())
     end
 
+    --[[
     local ok, err = dao:are_migrations_uptodate()
     if err then
       -- error correctly formatted by the DAO
@@ -56,6 +57,7 @@ local function execute(args)
     if not ok then
       error("Cassandra has not reached cluster consensus yet")
     end
+    --]]
 
     assert(nginx_signals.start(conf))
 

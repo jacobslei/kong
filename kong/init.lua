@@ -100,17 +100,17 @@ local voidpp = ffi.typeof("void**")
 
 local loaded_plugins
 
-local function load_plugins(kong_conf, dao)
+local function load_plugins(kong_conf, db, dao)
   local in_db_plugins, sorted_plugins = {}, {}
 
   ngx_log(ngx_DEBUG, "Discovering used plugins")
 
-  local rows, err_t = dao.plugins:find_all()
-  if not rows then
-    return nil, tostring(err_t)
+  for row, err in db.plugins:each() do
+    if err then
+      return nil, tostring(err)
+    end
+    in_db_plugins[row.name] = true
   end
-
-  for _, row in ipairs(rows) do in_db_plugins[row.name] = true end
 
   -- check all plugins in DB are enabled/installed
   for plugin in pairs(in_db_plugins) do
@@ -135,6 +135,12 @@ local function load_plugins(kong_conf, dao)
     local ok, schema = utils.load_module_if_exists("kong.plugins." .. plugin .. ".schema")
     if not ok then
       return nil, "no configuration schema found for plugin: " .. plugin
+    end
+
+    local err
+    ok, err = db.plugins.schema:new_subschema(plugin, schema)
+    if not ok then
+      return nil, "error initializing schema for plugin: " .. err
     end
 
     ngx_log(ngx_DEBUG, "Loading plugin: " .. plugin)
@@ -209,7 +215,7 @@ function Kong.init()
 
   db.old_dao = dao
 
-  loaded_plugins = assert(load_plugins(config, dao))
+  loaded_plugins = assert(load_plugins(config, db, dao))
 
   assert(runloop.build_router(db, "init"))
   assert(runloop.build_api_router(dao, "init"))

@@ -99,6 +99,7 @@ local cast = ffi.cast
 local voidpp = ffi.typeof("void**")
 
 local loaded_plugins
+local schema_state
 
 local function load_plugins(kong_conf, dao)
   local in_db_plugins, sorted_plugins = {}, {}
@@ -199,7 +200,13 @@ function Kong.init()
   local db = assert(DB.new(config))
   assert(db:init_connector())
 
-  --local schema_state = assert(db:schema_state())
+  schema_state = assert(db:schema_state())
+  if schema_state.needs_bootstrap  then
+    error("database needs bootstrap, run 'kong migrations bootstrap'")
+
+  elseif schema_state.new_migrations then
+    error("new migrations available, run 'kong migrations check/up'")
+  end
   --[[
   if schema_state.pending_migrations then
     assert(db:load_pending_migrations(schema_state.pending_migrations))
@@ -250,6 +257,31 @@ function Kong.init_worker()
   if not ok then
     ngx_log(ngx_CRIT, "could not init DB: ", err)
     return
+  end
+
+
+  if ngx.worker.id() == 0 then
+    if schema_state.missing_migrations then
+      local missing = {}
+      for _, t in ipairs(schema_state.missing_migrations) do
+        table.insert(missing, string.format("%s (%s)", t.subsystem,
+                              table.concat(t.migrations, ", ")))
+      end
+
+      ngx.log(ngx.WARN, "missing migrations: ",
+                        table.concat(missing, " "))
+    end
+
+    if schema_state.pending_migrations then
+      local pending = {}
+      for _, t in ipairs(schema_state.pending_migrations) do
+        table.insert(pending, string.format("%s(%s)", t.subsystem,
+                              table.concat(t.migrations, ", ")))
+      end
+
+      ngx.log(ngx.INFO, "starting with pending migrations: ",
+                        table.concat(pending, ", "))
+    end
   end
 
 

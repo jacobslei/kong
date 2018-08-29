@@ -1,4 +1,5 @@
 return {
+  --[[
   translations = {
     --rename_column("routes", "strip_path", "preserve_path")
     {
@@ -20,6 +21,7 @@ return {
       end,
     },
   },
+  --]]
 
   postgres = {
     -- TODO

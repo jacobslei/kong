@@ -627,6 +627,7 @@ do
   end
 
 
+  --[[
   function DB:load_pending_migrations(migrations)
     if type(migrations) ~= "table" then
       error("migrations must be a table", 2)
@@ -663,6 +664,7 @@ do
 
     return true
   end
+  --]]
 end
 
 

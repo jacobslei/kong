@@ -1060,6 +1060,7 @@ function Schema:process_auto_fields(input, context)
   local output = tablex.deepcopy(input)
   local now = time()
 
+  --[[
   if context == "select" and self.translations then
     for _, translation in ipairs(self.translations) do
       if type(translation.read) == "function" then
@@ -1067,6 +1068,7 @@ function Schema:process_auto_fields(input, context)
       end
     end
   end
+  --]]
 
   for key, field in self:each_field() do
     if field.auto then
@@ -1104,6 +1106,7 @@ function Schema:process_auto_fields(input, context)
     end
   end
 
+  --[[
   if context ~= "select" and self.translations then
     for _, translation in ipairs(self.translations) do
       if type(translation.write) == "function" then
@@ -1111,11 +1114,13 @@ function Schema:process_auto_fields(input, context)
       end
     end
   end
+  --]]
 
   return output
 end
 
 
+--[[
 function Schema:load_translations(translation)
   if not self.translations then
     self.translations = {}
@@ -1129,6 +1134,7 @@ function Schema:load_translations(translation)
 
   insert(self.translations, translation)
 end
+--]]
 
 
 --- Validate a table against the schema, ensuring that the entity is complete.

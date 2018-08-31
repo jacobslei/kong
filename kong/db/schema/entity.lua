@@ -5,8 +5,9 @@ local Entity = {}
 
 local entity_errors = {
   NO_NILABLE = "Entities cannot have nilable types.",
-  MAP_KEY_STRINGS_ONLY = "Map keys must be strings",
-  AGGREGATE_ON_BASE_TYPES_ONLY = "Aggregates are allowed on base types only."
+  NO_FUNCTIONS = "Entities cannot have function types.",
+  MAP_KEY_STRINGS_ONLY = "Entities map keys must be strings.",
+  AGGREGATE_ON_BASE_TYPES_ONLY = "Entities aggregates are only allowed on base types."
 }
 
 
@@ -43,6 +44,8 @@ function Entity.new(definition)
         return nil, entity_errors.AGGREGATE_ON_BASE_TYPES_ONLY:format(name)
       end
 
+    elseif field.type == "function" then
+      return nil, entity_errors.NO_FUNCTIONS
     end
   end
 

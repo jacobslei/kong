@@ -1708,10 +1708,14 @@ function _M.new(connector, schema, errors)
       }
 
       local upsert_by_statement_name = "upsert_by_" .. unique_name
+      local conflict_key = unique_escaped
+      if composite_cache_key then
+        conflict_key = escape_identifier(connector, "cache_key")
+      end
       local upsert_by_statement = concat {
         "INSERT INTO ",  table_name_escaped, " (", insert_columns, ")\n",
         "     VALUES (", insert_expressions, ")\n",
-        "ON CONFLICT (", unique_escaped, ") DO UPDATE\n",
+        "ON CONFLICT (", conflict_key, ") DO UPDATE\n",
         "        SET ",  concat(upsert_expressions, ", "), "\n",
         "  RETURNING ",  select_expressions, ";",
       }

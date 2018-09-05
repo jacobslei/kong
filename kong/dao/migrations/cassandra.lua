@@ -147,22 +147,25 @@ return {
     name = "2016-02-25-160900_remove_null_consumer_id",
     up = function(db, _, _)
 
-      local rows, err = db:query([[
+      local coordinator = db:get_coordinator()
+      for rows, err in coordinator:iterate([[
         SELECT *
         FROM plugins
         WHERE consumer_id = 00000000-0000-0000-0000-000000000000
-      ]])
-      if err then
-        return err
-      end
-
-      for _, row in ipairs(rows) do
-        local _, err = db:query([[
-          UPDATE plugins
-          SET consumer_id = NULL
-          WHERE id = ?]], { row.id })
+      ]]) do
         if err then
           return err
+        end
+
+        for _, row in ipairs(rows) do
+          local _
+          _, err = db:query([[
+            UPDATE plugins
+            SET consumer_id = NULL
+            WHERE id = ?]], { row.id })
+          if err then
+            return err
+          end
         end
       end
     end
@@ -467,26 +470,29 @@ return {
         "ldap-auth",
         "oauth2",
       }) do
-        local rows, err = db:query([[
+        local coordinator = db:get_coordinator()
+        for rows, err in coordinator:iterate([[
           SELECT * FROM plugins where name = ?
-        ]], { name })
-        if err then
-          return err
-        end
-
-        for _, row in ipairs(rows) do
-          local config
-          if type(row.config) == "string" then
-            config = cjson.decode(row.config)
+        ]], { name }) do
+          if err then
+            return err
           end
-          if config and not config.anonymous then
-            config.anonymous = ""
-            local _, err = db:query([[
-              UPDATE plugins
-              SET config = ?
-              WHERE id = ?]], { cjson.encode(config), row.id })
-            if err then
-              return err
+
+          for _, row in ipairs(rows) do
+            local config
+            if type(row.config) == "string" then
+              config = cjson.decode(row.config)
+            end
+            if config and not config.anonymous then
+              config.anonymous = ""
+              local _
+              _, err = db:query([[
+                UPDATE plugins
+                SET config = ?
+                WHERE id = ?]], { cjson.encode(config), row.id })
+              if err then
+                return err
+              end
             end
           end
         end

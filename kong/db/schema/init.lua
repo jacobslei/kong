@@ -1242,29 +1242,23 @@ end
 --- Schema-aware deep-merge of two entities.
 -- Uses schema knowledge to merge two records field-by-field,
 -- but not merge the content of two arrays.
--- @param top the entity whose values that takes precedence
+-- @param top the entity whose values take precedence
 -- @param bottom the entity whose values are the fallback
 -- @return the merged entity
 function Schema:merge_values(top, bottom)
   local output = {}
   bottom = bottom or {}
-  for key, value in pairs(bottom) do
-    output[key] = value
-  end
   for key, field in self:each_field(bottom) do
-    local field_value = top[key]
+    local top_v = top[key]
 
-    if field_value ~= nil then
-      local field_type = field.type
+    if top_v == nil then
+      output[key] = bottom[key]
 
-      if field_type == "record"
-             and not field.abstract
-             and field_value ~= null then
-        local field_schema = get_field_schema(field)
-        output[key] = field_schema:merge_values(field_value, bottom[key])
-
+    else
+      if field.type == "record" and not field.abstract and top_v ~= null then
+        output[key] = get_field_schema(field):merge_values(top_v, bottom[key])
       else
-        output[key] = field_value
+        output[key] = top_v
       end
     end
   end

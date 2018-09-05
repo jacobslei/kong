@@ -424,11 +424,11 @@ function _M.new(connector, schema, errors)
       if not _constraints[field.reference] then
         _constraints[field.reference] = {}
       end
-      _constraints[field.reference][schema.name] = {
+      insert(_constraints[field.reference], {
         schema     = schema,
         field_name = field_name,
         on_delete  = field.on_delete,
-      }
+      })
     end
   end
 
@@ -979,7 +979,8 @@ do
 
     local constraints = _constraints[schema.name]
     if constraints then
-      for _, constraint in pairs(constraints) do
+      for i = 1, #constraints do
+        local constraint = constraints[i]
         -- foreign keys could be pointing to this entity
         -- this mimics the "ON DELETE" constraint of supported
         -- RDBMs (e.g. PostgreSQL)

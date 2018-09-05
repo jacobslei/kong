@@ -1571,11 +1571,11 @@ function Schema.new(definition, is_subschema)
         if not _constraints[field.reference] then
           _constraints[field.reference] = {}
         end
-        _constraints[field.reference][self.name] = {
+        table.insert(_constraints[field.reference], {
           schema     = self,
           field_name = key,
           on_delete  = field.on_delete,
-        }
+        })
       end
     end
   end
